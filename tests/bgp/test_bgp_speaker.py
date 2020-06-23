@@ -7,7 +7,7 @@ import requests
 from common.fixtures.ptfhost_utils import copy_ptftests_directory   # lgtm[py/unused-import]
 from common.fixtures.ptfhost_utils import change_mac_addresses      # lgtm[py/unused-import]
 from ptf_runner import ptf_runner
-
+from common.utilities import wait_tcp_connection
 
 def generate_ips(num, prefix, exclude_ips):
     """
@@ -39,7 +39,7 @@ def announce_route(ptfip, neighbor, route, nexthop, port):
 
 
 @pytest.fixture(scope="module")
-def common_setup_teardown(duthost, ptfhost):
+def common_setup_teardown(duthost, ptfhost, localhost):
 
     logging.info("########### Setup for bgp speaker testing ###########")
 
@@ -101,6 +101,10 @@ def common_setup_teardown(duthost, ptfhost):
                        local_asn=bgp_speaker_asn,
                        peer_asn=mg_facts['minigraph_bgp_asn'],
                        port=str(port_num[i]))
+
+    # check exabgp http_api port is ready
+    for i in range(0, 3):
+        assert wait_tcp_connection(localhost, ptfip, port_num[i])
 
     logging.info("########### Done setup for bgp speaker testing ###########")
 
