@@ -26,7 +26,10 @@ from common.platform.daemon_utils import check_pmon_daemon_status
 
 from check_critical_services import check_critical_services
 
-pytestmark = [pytest.mark.disable_loganalyzer]
+pytestmark = [
+    pytest.mark.disable_loganalyzer,
+    pytest.mark.topology('t0')
+]
 
 MAX_WAIT_TIME_FOR_INTERFACES = 300
 MAX_WAIT_TIME_FOR_REBOOT_CAUSE = 120
@@ -213,6 +216,7 @@ def test_watchdog_reboot(duthost, localhost, conn_graph_facts):
     reboot_and_check(localhost, duthost, conn_graph_facts["device_conn"], REBOOT_TYPE_WATCHDOG)
 
 
+@pytest.mark.topology('t0', 't1')
 def test_continuous_reboot(duthost, localhost, conn_graph_facts):
     """
     @summary: This test case is to perform 3 cold reboot in a row
