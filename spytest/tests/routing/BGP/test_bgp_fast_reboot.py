@@ -10,6 +10,10 @@ import apis.switching.vlan as vlan_obj
 
 vars = dict()
 
+pytestmark = [
+    pytest.mark.topology('t0')
+]
+
 @pytest.fixture(scope="module", autouse=True)
 def bgp_fast_reboot_module_hooks(request):
     global vars

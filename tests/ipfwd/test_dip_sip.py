@@ -5,6 +5,10 @@ import logging
 
 from common.fixtures.ptfhost_utils import change_mac_addresses      # lgtm[py/unused-import]
 
+pytestmark = [
+    pytest.mark.topology('t0', 't1')
+]
+
 TOPO_LIST = {'t0', 't1', 't1-lag'}
 PORTS_TOPO = {'t1'}
 LAG_TOPO = {'t0', 't1-lag'}

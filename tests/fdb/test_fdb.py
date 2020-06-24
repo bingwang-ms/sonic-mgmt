@@ -9,6 +9,10 @@ import pprint
 
 from common.fixtures.ptfhost_utils import change_mac_addresses      # lgtm[py/unused-import]
 
+pytestmark = [
+    pytest.mark.topology('t0')
+]
+
 DEFAULT_FDB_ETHERNET_TYPE = 0x1234
 DUMMY_MAC_PREFIX = "02:11:22:33"
 DUMMY_MAC_COUNT = 10

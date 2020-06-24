@@ -7,6 +7,9 @@ from common.utilities import wait
 
 logger = logging.getLogger('__name__')
 
+pytestmark = [
+    pytest.mark.topology('t0', 't1')
+]
 
 def parse_column_positions(separation_line, separation_char='-'):
     '''Parse the position of each columns in the command output

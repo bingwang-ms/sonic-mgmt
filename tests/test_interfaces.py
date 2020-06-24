@@ -1,6 +1,10 @@
 from netaddr import IPAddress
 import pytest
 
+pytestmark = [
+    pytest.mark.topology('t0', 't1')
+]
+
 def test_interfaces(duthost):
     """compare the interfaces between observed states and target state"""
 

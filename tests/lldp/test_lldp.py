@@ -3,6 +3,10 @@ import pytest
 
 logger = logging.getLogger(__name__)
 
+pytestmark = [
+    pytest.mark.topology('t0', 't1')
+]
+
 @pytest.fixture(scope="module", autouse=True)
 def setup_check_topo(testbed):
     if testbed['topo']['type'] == 'ptf':

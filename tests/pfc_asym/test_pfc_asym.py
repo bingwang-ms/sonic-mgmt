@@ -1,5 +1,8 @@
 from ptf_runner import ptf_runner
 
+pytestmark = [
+    pytest.mark.topology('t0')
+]
 
 def test_pfc_asym_off_tx_pfc(ptfhost, setup, pfc_storm_runner):
     """
