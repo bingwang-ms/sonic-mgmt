@@ -17,6 +17,7 @@ from collections import defaultdict
 from tests.common.fixtures.conn_graph_facts import conn_graph_facts
 from tests.common.devices import SonicHost, Localhost
 from tests.common.devices import PTFHost, EosHost, FanoutHost
+from tests.common.connections import ConsoleHost
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,8 @@ pytest_plugins = ('tests.common.plugins.ptfadapter',
                   'tests.common.plugins.sanity_check',
                   'tests.common.plugins.custom_markers',
                   'tests.common.plugins.test_completeness',
-                  'tests.common.plugins.log_section_start')
+                  'tests.common.plugins.log_section_start',
+                  'tests.vxlan')
 
 
 class TestbedInfo(object):
@@ -96,6 +98,9 @@ def pytest_addoption(parser):
     # test_vrf options
     parser.addoption("--vrf_capacity", action="store", default=None, type=int, help="vrf capacity of dut (4-1000)")
     parser.addoption("--vrf_test_count", action="store", default=None, type=int, help="number of vrf to be tested (1-997)")
+
+    # qos_sai options
+    parser.addoption("--ptf_portmap", action="store", default=None, type=str, help="PTF port index to DUT port alias map")
 
     ############################
     # pfc_asym options         #
@@ -350,7 +355,9 @@ def creds(duthost):
         "sonicadmin_password",
         "docker_registry_host",
         "docker_registry_username",
-        "docker_registry_password"
+        "docker_registry_password",
+        "console_server_user",
+        "console_server_password"
     ]
     hostvars = duthost.host.options['variable_manager']._hostvars[duthost.hostname]
     for cred_var in cred_vars:
@@ -424,13 +431,18 @@ def tag_test_report(request, pytestconfig, testbed, duthost, record_testsuite_pr
 
         __report_metadata_added = True
 
-@pytest.fixture(scope="function", autouse=True)
-def check_dut_asic_type(request, duthost):
-    asic_marks = [mark for mark in request.node.iter_markers(name="asic")]
-    if not asic_marks:
-        return
-    supported_asics = [x.lower() for x in asic_marks[0].args]
-    dut_asic_type = duthost.facts["asic_type"].lower()
-    if supported_asics and dut_asic_type not in supported_asics:
-        pytest.skip("test requires asic in {!r}, current DUT asic is {!r}".format(supported_asics, dut_asic_type))
+@pytest.fixture(scope="module")
+def duthost_console(localhost, testbed, creds):
+    # todo: Multi-dut is needed? 
+    dut_hostname = testbed["duts"][0]
+
+    vars = localhost.host.options['inventory_manager'].get_host(dut_hostname).vars
+    return ConsoleHost(console_type=vars['console_type'],
+                       console_host=vars['console_host'],
+                       console_port=vars['console_port'],
+                       sonic_username=creds['sonicadmin_user'],
+                       sonic_password=creds['sonicadmin_password'],
+                       console_server_username=creds['console_server_user'],
+                       console_server_password=creds['console_server_password'])
+
 
