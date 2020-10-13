@@ -32,7 +32,6 @@ import traceback
 import socket
 import struct
 from pprint import pprint
-from pprint import pformat
 from device_connection import DeviceConnection
 import re
 
@@ -336,18 +335,18 @@ class Vxlan(BaseTest):
 
                 res_f, out_f = self.RegularLAGtoVLAN(test)
                 print "  RegularLAGtoVLAN = ", res_f
-                self.assertTrue(res_f, "RegularLAGtoVLAN test failed:\n  %s\n\ntest:\n%s" % (out_f, pformat(test)))
+                self.assertTrue(res_f, "RegularLAGtoVLAN test failed:\n  %s\n\n" % (out_f))
 
                 res_t, out_t = self.RegularVLANtoLAG(test)
                 print "  RegularVLANtoLAG = ", res_t
-                self.assertTrue(res_t, "RegularVLANtoLAG test failed:\n  %s\n\ntest:\n%s" % (out_t, pformat(test)))
+                self.assertTrue(res_t, "RegularVLANtoLAG test failed:\n  %s\n\n" % (out_t))
 
                 res_v, out_v = self.Vxlan(test)
                 print "  Vxlan            = ", res_v
                 if self.vxlan_enabled:
-                    self.assertTrue(res_v, "VxlanTest failed:\n  %s\n\ntest:\n%s"  % (out_v, pformat(test)))
+                    self.assertTrue(res_v, "VxlanTest failed:\n  %s\n\n"  % (out_v))
                 else:
-                    self.assertFalse(res_v, "VxlanTest: vxlan works, but it must have been disabled!\n\ntest:%s" % pformat(test))
+                    self.assertFalse(res_v, "VxlanTest: vxlan works, but it must have been disabled!\n\n")
         except AssertionError as e:
             err = str(e)
             trace = traceback.format_exc()
@@ -373,40 +372,50 @@ class Vxlan(BaseTest):
 
 
     def Vxlan(self, test):
+        out = ""
+        res = True
         for i, n in enumerate(test['acc_ports']):
             for j, a in enumerate(test['acc_ports']):
-                res, out = self.checkVxlan(a, n, test)
-                if not res:
-                    return False, out + " | net_port_rel(acc)=%d acc_port_rel=%d" % (i, j)
+                tmp_res, tmp_out = self.checkVxlan(a, n, test)
+                if not tmp_res:
+                    res = False
+                    out += tmp_out + " | net_port_rel(acc)=%d acc_port_rel=%d\n" % (i, j)
 
         for i, n in enumerate(self.net_ports):
             for j, a in enumerate(test['acc_ports']):
-                res, out = self.checkVxlan(a, n, test)
-                if not res:
-                    return False, out + " | net_port_rel=%d acc_port_rel=%d" % (i, j)
+                tmp_res, tmp_out = self.checkVxlan(a, n, test)
+                if not tmp_res:
+                    res = False
+                    out += tmp_res + " | net_port_rel=%d acc_port_rel=%d\n" % (i, j)
         return True, ""
 
     def RegularLAGtoVLAN(self, test, wu = False):
+        out = ""
+        res = True
         for i, n in enumerate(self.net_ports):
             for j, a in enumerate(test['acc_ports']):
-                res, out = self.checkRegularRegularLAGtoVLAN(a, n, test, wu)
+                tmp_res, tmp_out = self.checkRegularRegularLAGtoVLAN(a, n, test, wu)
                 if wu:
                     #Wait a short time for building FDB and ARP table
                     time.sleep(0.5)
-                if not res and not wu:
-                    return False, out + " | net_port_rel=%d acc_port_rel=%d" % (i, j)
+                if not tmp_res and not wu:
+                    res = False
+                    out += tmp_out + " | net_port_rel=%d acc_port_rel=%d\n" % (i, j)
             #We only loop all acc_ports in warmup
             if wu:
                 break
-        return True, ""
+        return res, out
 
     def RegularVLANtoLAG(self, test):
+        out = ""
+        res = True
         for i, (dst, ports) in enumerate(self.pc_info):
             for j, a in enumerate(test['acc_ports']):
-                res, out = self.checkRegularRegularVLANtoLAG(a, ports, dst, test)
-                if not res:
-                    return False, out + " | pc_info_rel=%d acc_port_rel=%d" % (i, j)
-        return True, ""
+                tmp_res, tmp_out = self.checkRegularRegularVLANtoLAG(a, ports, dst, test)
+                if not tmp_res:
+                    res = False
+                    out += tmp_out + " | pc_info_rel=%d acc_port_rel=%d\n" % (i, j)
+        return res, out
 
     def checkRegularRegularVLANtoLAG(self, acc_port, pc_ports, dst_ip, test):
         src_mac = self.ptf_mac_addrs['eth%d' % acc_port]
